@@ -1,0 +1,218 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "devpulse.fullname" . }}-redis
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: cache
+spec:
+  serviceName: {{ include "devpulse.fullname" . }}-redis
+  replicas: {{ .Values.redis.replicas }}
+  
+  selector:
+    matchLabels:
+      {{- include "devpulse.selectorLabels" . | nindent 6 }}
+      component: cache
+  
+  template:
+    metadata:
+      labels:
+        {{- include "devpulse.selectorLabels" . | nindent 8 }}
+        component: cache
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-redis.yaml") . | sha256sum | trunc 8 }}
+    
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ include "devpulse.name" . }}-redis
+              topologyKey: kubernetes.io/hostname
+      
+      serviceAccountName: {{ include "devpulse.serviceAccountName" . }}
+      
+      securityContext:
+        fsGroup: 999
+        runAsNonRoot: true
+        runAsUser: 999
+      
+      containers:
+        # Redis container
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+            - name: sentinel
+              containerPort: 26379
+              protocol: TCP
+          
+          command:
+            - redis-server
+            - /etc/redis/redis.conf
+          
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.redis.existingSecret | default "redis-credentials" }}
+                  key: {{ .Values.secrets.redis.existingSecretPasswordKey | default "password" }}
+          
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 999
+            runAsNonRoot: true
+          
+          {{- with .Values.redis.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/redis
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          
+          {{- if .Values.redis.probes.enabled }}
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: {{ .Values.redis.probes.liveness.initialDelaySeconds | default 15 }}
+            periodSeconds: {{ .Values.redis.probes.liveness.periodSeconds | default 10 }}
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: {{ .Values.redis.probes.readiness.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ .Values.redis.probes.readiness.periodSeconds | default 3 }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          {{- end }}
+        
+        {{- if .Values.redis.highAvailability.sentinel.enabled }}
+        # Sentinel container
+        - name: sentinel
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          
+          ports:
+            - name: sentinel
+              containerPort: 26379
+              protocol: TCP
+          
+          command:
+            - redis-sentinel
+            - /etc/sentinel/sentinel.conf
+          
+          env:
+            - name: MASTER_IP
+              value: "{{ include \"devpulse.fullname\" . }}-redis-0"
+            - name: MASTER_PORT
+              value: "6379"
+            - name: QUORUM
+              value: {{ .Values.redis.highAvailability.sentinel.quorum | quote }}
+            - name: SENTINEL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.redis.existingSecret | default "redis-credentials" }}
+                  key: {{ .Values.secrets.redis.existingSecretPasswordKey | default "password" }}
+          
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 999
+            runAsNonRoot: true
+          
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          
+          volumeMounts:
+            - name: sentinel-config
+              mountPath: /etc/sentinel
+              readOnly: true
+            - name: sentinel-data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+          
+          livenessProbe:
+            tcpSocket:
+              port: 26379
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+        {{- end }}
+      
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "devpulse.fullname" . }}-redis-config
+            defaultMode: 0755
+        
+        {{- if .Values.redis.highAvailability.sentinel.enabled }}
+        - name: sentinel-config
+          configMap:
+            name: {{ include "devpulse.fullname" . }}-sentinel-config
+            defaultMode: 0755
+        
+        - name: sentinel-data
+          emptyDir: {}
+        {{- end }}
+        
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 100Mi
+  
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "devpulse.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.redis.storage.accessMode }}
+        storageClassName: {{ .Values.redis.storage.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.storage.size }}
+
+{{- end }}

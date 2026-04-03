@@ -1,0 +1,164 @@
+{{- if .Values.database.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "devpulse.fullname" . }}-db
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: database
+spec:
+  serviceName: {{ include "devpulse.fullname" . }}-db
+  replicas: {{ .Values.database.replicas }}
+  
+  selector:
+    matchLabels:
+      {{- include "devpulse.selectorLabels" . | nindent 6 }}
+      component: database
+  
+  template:
+    metadata:
+      labels:
+        {{- include "devpulse.selectorLabels" . | nindent 8 }}
+        component: database
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-db.yaml") . | sha256sum | trunc 8 }}
+    
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - {{ include "devpulse.name" . }}-db
+                topologyKey: kubernetes.io/hostname
+      
+      serviceAccountName: {{ include "devpulse.serviceAccountName" . }}
+      
+      securityContext:
+        fsGroup: 999
+      
+      {{- if .Values.database.initContainers }}
+      initContainers:
+        {{- range .Values.database.initContainers }}
+        - name: {{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          imagePullPolicy: {{ .image.pullPolicy | default "IfNotPresent" }}
+          
+          {{- if .env }}
+          env:
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          
+          {{- if .command }}
+          command:
+            {{- toYaml .command | nindent 12 }}
+          {{- end }}
+          
+          {{- if .volumeMounts }}
+          volumeMounts:
+            {{- toYaml .volumeMounts | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      
+      containers:
+        - name: postgresql
+          image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.database.existingSecret | default "db-credentials" }}
+                  key: {{ .Values.secrets.database.existingSecretPasswordKey | default "password" }}
+            - name: POSTGRES_USER
+              value: {{ .Values.database.config.postgresUser | default "postgres" }}
+            - name: POSTGRES_DB
+              value: {{ .Values.secrets.database.database | default "devpulse" }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          
+          securityContext:
+            runAsUser: 999
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          
+          {{- with .Values.database.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              mountPath: /etc/postgresql
+            - name: cache
+              mountPath: /var/run/postgresql
+          
+          {{- if .Values.database.probes.enabled }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres
+            initialDelaySeconds: {{ .Values.database.probes.liveness.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.database.probes.liveness.periodSeconds | default 10 }}
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres
+            initialDelaySeconds: {{ .Values.database.probes.readiness.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ .Values.database.probes.readiness.periodSeconds | default 5 }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          {{- end }}
+      
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "devpulse.fullname" . }}-db-config
+            defaultMode: 0755
+        - name: cache
+          emptyDir:
+            medium: Memory
+  
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "devpulse.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.database.storage.accessMode }}
+        storageClassName: {{ .Values.database.storage.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.database.storage.size }}
+
+{{- end }}

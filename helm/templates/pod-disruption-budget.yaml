@@ -1,0 +1,75 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+
+{{- if .Values.podDisruptionBudget.app }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "devpulse.fullname" . }}-app
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: app
+spec:
+  {{- if .Values.podDisruptionBudget.app.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.app.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.app.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.app.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "devpulse.selectorLabels" . | nindent 6 }}
+      component: app
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+
+---
+{{- end }}
+
+{{- if .Values.podDisruptionBudget.database }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "devpulse.fullname" . }}-db
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: database
+spec:
+  {{- if .Values.podDisruptionBudget.database.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.database.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.database.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.database.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "devpulse.selectorLabels" . | nindent 6 }}
+      component: database
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+
+---
+{{- end }}
+
+{{- if .Values.podDisruptionBudget.redis }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "devpulse.fullname" . }}-redis
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: cache
+spec:
+  {{- if .Values.podDisruptionBudget.redis.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.redis.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.redis.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.redis.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "devpulse.selectorLabels" . | nindent 6 }}
+      component: cache
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+
+---
+{{- end }}
+
+{{- end }}

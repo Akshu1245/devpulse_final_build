@@ -1,0 +1,14 @@
+node_modules
+*.ts
+!*.d.ts
+frontend
+extension
+_configs
+configs
+docs
+scripts
+**/*.md
+**/*.sql
+.env
+.env.*
+!.env.example

@@ -1,0 +1,214 @@
+{{- if and (.Values.app) (not (empty .Values.app.image.repository)) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "devpulse.fullname" . }}-app
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: app
+spec:
+  {{- if not .Values.autoscaling.app.enabled }}
+  replicas: {{ .Values.app.replicaCount }}
+  {{- end }}
+  
+  strategy:
+    type: {{ .Values.app.strategy.type }}
+    {{- if eq .Values.app.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.app.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.app.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  
+  selector:
+    matchLabels:
+      {{- include "devpulse.selectorLabels" . | nindent 6 }}
+      component: app
+  
+  template:
+    metadata:
+      annotations:
+        {{- include "devpulse.podAnnotations" . | nindent 8 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-app.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret-app.yaml") . | sha256sum }}
+      labels:
+        {{- include "devpulse.selectorLabels" . | nindent 8 }}
+        component: app
+    
+    spec:
+      {{- with .Values.app.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      
+      serviceAccountName: {{ include "devpulse.serviceAccountName" . }}
+      
+      {{- if .Values.app.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.app.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      
+      {{- if .Values.app.podAntiAffinity.enabled }}
+      affinity:
+        {{- if eq .Values.app.podAntiAffinity.type "required" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ include "devpulse.name" . }}
+              topologyKey: {{ .Values.app.podAntiAffinity.topologyKey }}
+        {{- else }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.app.podAntiAffinity.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - {{ include "devpulse.name" . }}
+                topologyKey: {{ .Values.app.podAntiAffinity.topologyKey }}
+        {{- end }}
+        
+        {{- if .Values.app.nodeAffinity }}
+        nodeAffinity:
+          {{- if .Values.app.nodeAffinity.requiredDuringScheduling }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- range .Values.app.nodeAffinity.requiredDuringScheduling }}
+              - matchExpressions:
+                  - key: {{ .key }}
+                    operator: {{ .operator }}
+                    values: {{ .values | toJson }}
+              {{- end }}
+          {{- end }}
+          {{- if .Values.app.nodeAffinity.preferredDuringScheduling }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            {{- range .Values.app.nodeAffinity.preferredDuringScheduling }}
+            - weight: {{ .weight }}
+              preference:
+                matchExpressions:
+                  - key: {{ .preference.matchExpressions[0].key }}
+                    operator: {{ .preference.matchExpressions[0].operator }}
+                    values: {{ .preference.matchExpressions[0].values | toJson }}
+            {{- end }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
+      
+      {{- with .Values.app.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      
+      {{- if .Values.app.priorityClassName }}
+      priorityClassName: {{ .Values.app.priorityClassName }}
+      {{- end }}
+      
+      restartPolicy: {{ .Values.app.restartPolicy }}
+      terminationGracePeriodSeconds: 30
+      
+      containers:
+        - name: {{ include "devpulse.name" . }}
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.containerPort }}
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          
+          {{- with .Values.app.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+            - name: NODE_ENV
+              value: {{ .Values.global.environment }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: REDIS_URL
+          {{- end }}
+          
+          {{- if .Values.app.envFrom }}
+          envFrom:
+            {{- toYaml .Values.app.envFrom | nindent 12 }}
+          {{- end }}
+          
+          {{- with .Values.app.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          
+          {{- include "devpulse.resources" . | nindent 10 }}
+          
+          {{- if .Values.app.volumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.app.volumeMounts | nindent 12 }}
+          {{- end }}
+          
+          {{- if .Values.app.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.app.probes.startup.httpGet.path }}
+              port: {{ .Values.app.probes.startup.httpGet.port }}
+            failureThreshold: {{ .Values.app.probes.startup.failureThreshold }}
+            periodSeconds: {{ .Values.app.probes.startup.periodSeconds }}
+          {{- end }}
+          
+          {{- if .Values.app.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.app.probes.readiness.httpGet.path }}
+              port: {{ .Values.app.probes.readiness.httpGet.port }}
+            initialDelaySeconds: {{ .Values.app.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.app.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.app.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.app.probes.readiness.failureThreshold }}
+          {{- end }}
+          
+          {{- if .Values.app.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.app.probes.liveness.httpGet.path }}
+              port: {{ .Values.app.probes.liveness.httpGet.port }}
+            initialDelaySeconds: {{ .Values.app.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.app.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.app.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.app.probes.liveness.failureThreshold }}
+          {{- end }}
+          
+          {{- if .Values.app.lifecycle }}
+          lifecycle:
+            {{- if .Values.app.lifecycle.preStop }}
+            preStop:
+              {{- toYaml .Values.app.lifecycle.preStop | nindent 14 }}
+            {{- end }}
+            {{- if .Values.app.lifecycle.postStart }}
+            postStart:
+              {{- toYaml .Values.app.lifecycle.postStart | nindent 14 }}
+            {{- end }}
+          {{- end }}
+      
+      {{- if .Values.app.volumes }}
+      volumes:
+        {{- toYaml .Values.app.volumes | nindent 8 }}
+      {{- else }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+      {{- end }}
+{{- end }}

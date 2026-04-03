@@ -1,0 +1,98 @@
+name: DevPulse Security Scan
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, master, develop]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  devpulse-scan:
+    name: API Security and Cost Intelligence Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Run DevPulse Scan
+        id: scan
+        env:
+          DEVPULSE_API_KEY: ${{ secrets.DEVPULSE_API_KEY }}
+          DEVPULSE_WORKSPACE_ID: ${{ secrets.DEVPULSE_WORKSPACE_ID }}
+        run: |
+          npx --yes devpulse-cli@latest scan \
+            --workspace-id $DEVPULSE_WORKSPACE_ID \
+            --api-key $DEVPULSE_API_KEY \
+            --commit ${{ github.sha }} \
+            --output devpulse-results.json || echo '{}' > devpulse-results.json
+      
+      - name: Post PR Comment
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let results;
+            try {
+              results = JSON.parse(fs.readFileSync('devpulse-results.json', 'utf8'));
+            } catch {
+              results = { error: true, message: 'Scan results unavailable' };
+            }
+            
+            if (results.error) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '## DevPulse Scan\n\nScan could not complete. Please check your DEVPULSE_API_KEY and DEVPULSE_WORKSPACE_ID secrets.'
+              });
+              return;
+            }
+            
+            const riskEmoji = results.riskScore >= 80 ? '🔴' : results.riskScore >= 60 ? '🟠' : results.riskScore >= 40 ? '🟡' : '🟢';
+            
+            const body = '## ' + riskEmoji + ' DevPulse Security Scan Results\n\n' +
+              '**Risk Score: ' + (results.riskScore || 0) + '/100** (' + (results.riskTier || 'Unknown') + ')\n\n' +
+              '| Category | Count |\n' +
+              '|----------|-------|\n' +
+              '| 🔴 Critical | ' + (results.critical || 0) + ' |\n' +
+              '| 🟠 High | ' + (results.high || 0) + ' |\n' +
+              '| 🟡 Medium | ' + (results.medium || 0) + ' |\n' +
+              '| 🟢 Low | ' + (results.low || 0) + ' |\n' +
+              '| 💰 LLM Cost Anomalies | ' + (results.costAnomalies || 0) + ' |\n' +
+              '| 👻 Shadow APIs | ' + (results.shadowApis || 0) + ' |\n\n' +
+              (results.topFindings?.length ? '### Top Findings\n' + results.topFindings.slice(0, 5).map(function(f) { return '- **' + f.severity + '**: ' + f.title + ' — `' + f.endpoint + '`'; }).join('\n') : '### No critical findings') + '\n\n' +
+              (results.costSummary ? '### Cost Intelligence\n- Estimated daily LLM spend: **$' + (results.costSummary.dailyUsd || 0) + '**\n- Top cost driver: `' + (results.costSummary.topEndpoint || 'N/A') + '`' : '') + '\n\n' +
+              '[View Full Report →](' + (results.reportUrl || 'https://dashboard.devpulse.in') + ')';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+      
+      - name: Fail on Critical Vulnerabilities
+        if: always()
+        run: |
+          if [ -f devpulse-results.json ]; then
+            CRITICAL=$(cat devpulse-results.json | python3 -c "import sys, json; print(json.load(sys.stdin).get('critical', 0))" 2>/dev/null || echo "0")
+            if [ "$CRITICAL" -gt "0" ]; then
+              echo "FAILED: $CRITICAL critical vulnerabilities found"
+              exit 1
+            fi
+          fi

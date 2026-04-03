@@ -1,0 +1,139 @@
+{{- if and (.Values.app) (not (empty .Values.app.image.repository)) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devpulse.fullname" . }}-app
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: app
+  {{- with .Values.app.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.app.service.type }}
+  ports:
+    - port: {{ .Values.app.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 9090
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "devpulse.selectorLabels" . | nindent 4 }}
+    component: app
+
+---
+{{- end }}
+
+{{- if .Values.database.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devpulse.fullname" . }}-db
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: database
+spec:
+  clusterIP: None  # Headless service for StatefulSet
+  ports:
+    - port: 5432
+      targetPort: postgresql
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "devpulse.selectorLabels" . | nindent 4 }}
+    component: database
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devpulse.fullname" . }}-db-rw
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: postgresql
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "devpulse.selectorLabels" . | nindent 4 }}
+    component: database
+    statefulset.kubernetes.io/pod-name: {{ include "devpulse.fullname" . }}-db-0
+
+---
+{{- end }}
+
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devpulse.fullname" . }}-redis
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: cache
+spec:
+  clusterIP: None  # Headless service for StatefulSet
+  ports:
+    - port: 6379
+      targetPort: redis
+      protocol: TCP
+      name: redis
+    - port: 26379
+      targetPort: sentinel
+      protocol: TCP
+      name: sentinel
+  selector:
+    {{- include "devpulse.selectorLabels" . | nindent 4 }}
+    component: cache
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devpulse.fullname" . }}-redis-rw
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: cache
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: redis
+      protocol: TCP
+      name: redis
+  selector:
+    {{- include "devpulse.selectorLabels" . | nindent 4 }}
+    component: cache
+    statefulset.kubernetes.io/pod-name: {{ include "devpulse.fullname" . }}-redis-0
+
+---
+{{- end }}
+
+{{- if .Values.worker.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devpulse.fullname" . }}-worker
+  labels:
+    {{- include "devpulse.labels" . | nindent 4 }}
+    component: worker
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3001
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "devpulse.selectorLabels" . | nindent 4 }}
+    component: worker
+
+---
+{{- end }}

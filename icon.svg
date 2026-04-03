@@ -1,0 +1,52 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="64" fill="#1d4ed8"/>
+  
+  <!-- Shield Shape (Security) -->
+  <path d="M 64 20 L 90 32 L 90 58 Q 90 78 64 95 Q 38 78 38 58 L 38 32 Z" 
+        fill="#ffffff" 
+        opacity="0.95"/>
+  
+  <!-- Inner Shield Border -->
+  <path d="M 64 25 L 85 35 L 85 56 Q 85 73 64 88 Q 43 73 43 56 L 43 35 Z" 
+        fill="none" 
+        stroke="#1d4ed8" 
+        stroke-width="2"/>
+  
+  <!-- Cost Graph Lines (Intelligence) -->
+  <g opacity="0.9">
+    <!-- Graph Line 1 (ascending) -->
+    <polyline points="48,65 54,62 60,55 66,58 72,50 78,54" 
+              fill="none" 
+              stroke="#fbbf24" 
+              stroke-width="3" 
+              stroke-linecap="round"/>
+    
+    <!-- Graph Line 2 (descending) -->
+    <polyline points="48,72 54,68 60,70 66,65 72,68 78,62" 
+              fill="none" 
+              stroke="#60a5fa" 
+              stroke-width="2.5" 
+              stroke-linecap="round"/>
+  </g>
+  
+  <!-- Data Points on Graph -->
+  <circle cx="60" cy="55" r="2.5" fill="#fbbf24"/>
+  <circle cx="72" cy="50" r="2.5" fill="#fbbf24"/>
+  <circle cx="66" cy="65" r="2" fill="#60a5fa"/>
+  
+  <!-- "DP" Text (DevPulse Branding) -->
+  <text x="64" y="46" 
+        font-family="Arial, sans-serif" 
+        font-size="18" 
+        font-weight="bold" 
+        fill="#1d4ed8" 
+        text-anchor="middle">DP</text>
+  
+  <!-- Subtle Pulse Effect Circle -->
+  <circle cx="64" cy="64" r="60" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          opacity="0.2"/>
+</svg>

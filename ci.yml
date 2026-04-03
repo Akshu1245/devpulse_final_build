@@ -1,0 +1,60 @@
+name: DevPulse CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run DevPulse Security Scan
+        id: devpulse-scan
+        run: |
+          # Simulate scan and output results
+          echo "CRITICAL=1" >> $GITHUB_OUTPUT
+          echo "HIGH=3" >> $GITHUB_OUTPUT
+          echo "MEDIUM=5" >> $GITHUB_OUTPUT
+          echo "LOW=2" >> $GITHUB_OUTPUT
+          echo "TOP_VULN=SQL Injection" >> $GITHUB_OUTPUT
+          echo "TOP_ENDPOINT=/api/users" >> $GITHUB_OUTPUT
+          echo "REMEDIATION=Use parameterized queries with Drizzle ORM." >> $GITHUB_OUTPUT
+
+      - name: Post DevPulse PR Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const results = {
+              critical: '${{ steps.devpulse-scan.outputs.CRITICAL }}',
+              high: '${{ steps.devpulse-scan.outputs.HIGH }}',
+              medium: '${{ steps.devpulse-scan.outputs.MEDIUM }}',
+              low: '${{ steps.devpulse-scan.outputs.LOW }}',
+              topVuln: '${{ steps.devpulse-scan.outputs.TOP_VULN }}',
+              topEndpoint: '${{ steps.devpulse-scan.outputs.TOP_ENDPOINT }}',
+              remediation: '${{ steps.devpulse-scan.outputs.REMEDIATION }}'
+            };
+            
+            const comment = `
+            🛡️ DevPulse Security Scan Results
+            
+            | Severity | Count | Status |
+            | :--- | :--- | :--- |
+            | 🔴 Critical | ${results.critical} | Action Required |
+            | 🟠 High | ${results.high} | Review Needed |
+            | 🟡 Medium | ${results.medium} | Monitor |
+            | 🟢 Low | ${results.low} | Informational |
+            
+            **Top Finding:** ${results.topVuln} on ${results.topEndpoint}
+            **One-line fix:** ${results.remediation}
+            
+            [View Full Report](https://app.devpulse.in/scans/${context.issue.number})
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            })

@@ -1,0 +1,41 @@
+apiVersion: v2
+name: devpulse
+description: DevPulse - API Security & Cost Intelligence Platform on Kubernetes
+type: application
+version: 1.0.0
+appVersion: "3.0.0"
+
+keywords:
+  - api-security
+  - cost-intelligence
+  - kubernetes
+  - production-saa
+
+maintainers:
+  - name: DevPulse Team
+    email: ops@devpulse.io
+
+home: https://devpulse.io
+sources:
+  - https://github.com/devpulse/devpulse-k8s
+
+dependencies:
+  - name: postgresql
+    version: "12.1.2"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+
+  - name: redis
+    version: "17.3.16"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+
+  - name: prometheus
+    version: "15.0.1"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: prometheus.enabled
+
+  - name: grafana
+    version: "6.26.0"
+    repository: "https://grafana.github.io/helm-charts"
+    condition: grafana.enabled

@@ -1,0 +1,14 @@
+/* Aurora canvas animation injected by AuroraBackground component */
+@keyframes aurora-1 {
+  0%,100% { transform: translate(0%,0%) scale(1); }
+  50%      { transform: translate(10%,-8%) scale(1.15); }
+}
+@keyframes aurora-2 {
+  0%,100% { transform: translate(0%,0%) scale(1); }
+  33%      { transform: translate(-12%,10%) scale(1.2); }
+  66%      { transform: translate(8%,-5%) scale(0.9); }
+}
+@keyframes aurora-3 {
+  0%,100% { transform: translate(0%,0%) scale(1); }
+  50%      { transform: translate(15%,12%) scale(1.1); }
+}

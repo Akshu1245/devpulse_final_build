@@ -1,0 +1,363 @@
+{
+  "name": "devpulse",
+  "displayName": "DevPulse",
+  "description": "API Security + LLM Cost Intelligence - OWASP scanning, shadow API detection, AgentGuard monitoring, and LLM cost tracking",
+  "version": "1.0.0",
+  "publisher": "rashi-technologies",
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1d4ed8",
+    "theme": "dark"
+  },
+  "bin": {
+    "devpulse-cli": "./dist/scripts/cli.js"
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTests.js",
+    "pretest": "npm run compile",
+    "vscode:prepublish": "npm run compile",
+    "start": "node dist/server.js",
+    "start:server": "node dist/server.js",
+    "start:worker": "node dist/_workers/index.js",
+    "dev": "npx tsx --watch server.ts",
+    "dev:worker": "npx tsx --watch _workers/index.ts",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "tsc -p ./ && echo Build complete",
+    "build:frontend": "cd frontend && npm run build",
+    "build:all": "npm run build && npm run build:frontend",
+    "migrate": "npx drizzle-kit push:mysql",
+    "worker": "npm run build && npm run start:worker"
+  },
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Akshu1245/devpulse_final_build.git"
+  },
+  "homepage": "https://github.com/Akshu1245/devpulse_final_build#readme",
+  "bugs": {
+    "url": "https://github.com/Akshu1245/devpulse_final_build/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "dist/**",
+    "icon.png",
+    "LICENSE",
+    "README.md"
+  ],
+  "categories": [
+    "Linters",
+    "Debuggers",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "api",
+    "llm",
+    "cost",
+    "owasp",
+    "vulnerability",
+    "scan"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devpulse.showDashboard",
+        "title": "DevPulse: Open Dashboard",
+        "category": "DevPulse",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "devpulse.startScan",
+        "title": "DevPulse: Start Security Scan",
+        "category": "DevPulse",
+        "icon": "$(search)"
+      },
+      {
+        "command": "devpulse.quickScan",
+        "title": "DevPulse: Quick Scan Current File",
+        "category": "DevPulse",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "devpulse.viewReports",
+        "title": "DevPulse: View Reports",
+        "category": "DevPulse",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "devpulse.openSettings",
+        "title": "DevPulse: Open Settings",
+        "category": "DevPulse",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "devpulse.showAgentGuard",
+        "title": "DevPulse: AgentGuard Dashboard",
+        "category": "DevPulse",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "devpulse.showShadowAPIs",
+        "title": "DevPulse: Discover Shadow APIs",
+        "category": "DevPulse",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "devpulse.importPostman",
+        "title": "DevPulse: Import Postman Collection",
+        "category": "DevPulse",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "devpulse.viewLLMCosts",
+        "title": "DevPulse: View LLM Costs",
+        "category": "DevPulse",
+        "icon": "$(currency)"
+      },
+      {
+        "command": "devpulse.refreshData",
+        "title": "DevPulse: Refresh Data",
+        "category": "DevPulse",
+        "icon": "$(refresh)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "devpulse.showDashboard",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.startScan",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.quickScan",
+        "key": "ctrl+shift+q",
+        "mac": "cmd+shift+q",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.viewReports",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.showAgentGuard",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.showShadowAPIs",
+        "key": "ctrl+shift+w",
+        "mac": "cmd+shift+w",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.viewLLMCosts",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.importPostman",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devpulse.refreshData",
+        "key": "ctrl+shift+f5",
+        "mac": "cmd+shift+f5"
+      },
+      {
+        "command": "devpulse.openSettings",
+        "key": "ctrl+shift+,",
+        "mac": "cmd+shift+,",
+        "when": "editorTextFocus"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "devpulseExplorer",
+          "name": "DevPulse",
+          "icon": "$(shield)",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "devpulseExplorer",
+        "contents": "## 🛡️ DevPulse Security Dashboard\n\nWelcome to DevPulse! Start by configuring your API key in settings.\n\n[Open Settings](command:devpulse.openSettings)\n\n### Quick Actions\n- [Start Security Scan](command:devpulse.startScan)\n- [View Reports](command:devpulse.viewReports)\n- [Import Postman Collection](command:devpulse.importPostman)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "devpulse.showDashboard",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "devpulse.startScan",
+          "when": "workspaceFolderCount > 0"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "devpulse.startScan",
+          "when": "resourceExtname == .ts || resourceExtname == .js || resourceExtname == .py",
+          "group": "DevPulse"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "devpulse.quickScan",
+          "when": "resourceExtname == .ts || resourceExtname == .js || resourceExtname == .py",
+          "group": "DevPulse"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DevPulse",
+      "properties": {
+        "devpulse.apiUrl": {
+          "type": "string",
+          "default": "https://api.devpulse.in",
+          "description": "DevPulse API URL for backend communication",
+          "order": 1
+        },
+        "devpulse.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your DevPulse API Key for authentication",
+          "order": 2
+        },
+        "devpulse.autoScanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically run security scan when files are saved",
+          "order": 3
+        },
+        "devpulse.scanOnOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run initial security scan when opening a workspace",
+          "order": 4
+        },
+        "devpulse.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show DevPulse status in the status bar",
+          "order": 5
+        },
+        "devpulse.refreshInterval": {
+          "type": "number",
+          "default": 30000,
+          "description": "Dashboard refresh interval in milliseconds",
+          "order": 6
+        }
+      }
+    },
+    "problemMatchers": [
+      {
+        "name": "devpulse",
+        "owner": "devpulse",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^([^\\s].*)\\[(\\d+),(\\d+)\\]\\s+([^\\s]+)\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 5
+        }
+      }
+    ],
+    "resourceLabelFormatters": [
+      {
+        "scheme": "devpulse",
+        "formatting": {
+          "label": "DevPulse: ${path}",
+          "separator": "/"
+        }
+      }
+    ]
+  },
+  "dependencies": {
+    "@trpc/client": "^10.45.0",
+    "@trpc/react-query": "^10.45.0",
+    "@trpc/server": "^10.45.0",
+    "aws-sdk": "^2.1693.0",
+    "bullmq": "^5.0.0",
+    "commander": "^11.1.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.0",
+    "drizzle-orm": "^0.29.0",
+    "express": "^4.18.0",
+    "express-rate-limit": "^7.1.0",
+    "helmet": "^7.1.0",
+    "ioredis": "^5.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^1.7.0",
+    "mysql2": "^3.9.0",
+    "node-cron": "^4.2.1",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^6.9.0",
+    "pdfkit": "^0.18.0",
+    "pg": "^8.20.0",
+    "pino": "^10.3.1",
+    "pino-pretty": "^13.1.3",
+    "postgres": "^3.4.0",
+    "prom-client": "^15.1.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-query": "^3.39.0",
+    "redis": "^4.6.0",
+    "stripe": "^21.0.1",
+    "ws": "^8.15.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.0",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^18.0.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/node-fetch": "^2.6.4",
+    "@types/nodemailer": "^6.4.0",
+    "@types/pdfkit": "^0.17.5",
+    "@types/pg": "^8.20.0",
+    "@types/pino": "^7.0.4",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "drizzle-kit": "^0.20.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.0.0",
+    "vsce": "^2.15.0"
+  }
+}

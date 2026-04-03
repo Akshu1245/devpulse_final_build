@@ -1,0 +1,187 @@
+# Prometheus Configuration for High-Availability Monitoring
+# Monitors:
+# - PostgreSQL primary and replica (replication lag)
+# - Redis master/replicas and Sentinels
+# - Nginx reverse proxy
+# - Node.js application instances
+# - BullMQ workers
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'devpulse'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load rules from files
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+
+scrape_configs:
+  # ==================== POSTGRESQL MONITORING ====================
+  
+  # PostgreSQL Primary
+  - job_name: 'postgres-primary'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          instance: 'primary'
+          type: 'database'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-primary:5432'
+
+  # PostgreSQL Replica
+  - job_name: 'postgres-replica'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          instance: 'replica'
+          type: 'database'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-replica:5432'
+
+  # ==================== REDIS MONITORING ====================
+  
+  # Redis Master
+  - job_name: 'redis-master'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          instance: 'master'
+          type: 'cache'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Redis Replica 1
+  - job_name: 'redis-replica-1'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          instance: 'replica-1'
+          type: 'cache'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Redis Replica 2
+  - job_name: 'redis-replica-2'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          instance: 'replica-2'
+          type: 'cache'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Redis Sentinel Monitoring (via redis-exporter with sentinel support)
+  - job_name: 'redis-sentinel'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          instance: 'sentinel'
+          type: 'cache'
+    scrape_interval: 15s
+    scrape_timeout: 5s
+
+  # ==================== APPLICATION INSTANCES ====================
+  
+  # App Instance 1
+  - job_name: 'devpulse-app-1'
+    static_configs:
+      - targets: ['app-1:3000']
+        labels:
+          instance: 'app-1'
+          type: 'application'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+  # App Instance 2
+  - job_name: 'devpulse-app-2'
+    static_configs:
+      - targets: ['app-2:3000']
+        labels:
+          instance: 'app-2'
+          type: 'application'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+  # App Instance 3
+  - job_name: 'devpulse-app-3'
+    static_configs:
+      - targets: ['app-3:3000']
+        labels:
+          instance: 'app-3'
+          type: 'application'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+  # ==================== WORKER MONITORING ====================
+  
+  # Worker Instance 1
+  - job_name: 'devpulse-worker-1'
+    static_configs:
+      - targets: ['worker-1:3000']
+        labels:
+          instance: 'worker-1'
+          type: 'worker'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+  # Worker Instance 2
+  - job_name: 'devpulse-worker-2'
+    static_configs:
+      - targets: ['worker-2:3000']
+        labels:
+          instance: 'worker-2'
+          type: 'worker'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+  # ==================== NGINX PROXY ====================
+  
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+        labels:
+          instance: 'nginx'
+          type: 'proxy'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: '/nginx-status'
+
+  # ==================== NODE EXPORTER (Container metrics) ====================
+  
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          instance: 'docker-host'
+          type: 'infrastructure'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ==================== PROMETHEUS SELF-MONITORING ====================
+  
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+    scrape_timeout: 10s

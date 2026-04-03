@@ -1,0 +1,579 @@
+# Production Values Override for DevPulse Kubernetes Deployment
+# Use: helm install devpulse ./helm -f helm/values-prod.yaml
+
+global:
+  environment: production
+  domain: api.devpulse.io
+  timezone: UTC
+
+###############################################################################
+# Production Application Configuration
+###############################################################################
+
+app:
+  replicaCount: 5
+  
+  image:
+    tag: "v3.0.0-prod"
+    pullPolicy: Always
+  
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 1024Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+  
+  # Pod anti-affinity REQUIRED in production
+  podAntiAffinity:
+    type: required
+    weight: 100
+    topologyKey: kubernetes.io/hostname
+  
+  # Require production node pool
+  nodeAffinity:
+    requiredDuringScheduling:
+      - key: workload
+        operator: In
+        values:
+          - production
+    
+    preferredDuringScheduling:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: node.kubernetes.io/instance-type
+              operator: In
+              values:
+                - m5.2xlarge
+                - m5.4xlarge
+                - c5.2xlarge
+  
+  # Health check config for production
+  probes:
+    startup:
+      failureThreshold: 60
+      periodSeconds: 5
+    
+    readiness:
+      initialDelaySeconds: 15
+      periodSeconds: 3
+      timeoutSeconds: 5
+      failureThreshold: 5
+    
+    liveness:
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+  
+  # Longer shutdown period for production
+  lifecycle:
+    preStop:
+      exec:
+        command: ["/bin/sh", "-c", "sleep 30"]
+
+###############################################################################
+# Production Scaling
+###############################################################################
+
+autoscaling:
+  app:
+    enabled: true
+    minReplicas: 5
+    maxReplicas: 20
+    targetCPUUtilization: 60      # Lower threshold for production
+    targetMemoryUtilization: 70
+    
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 600  # 10 minutes
+        policies:
+          - type: Percent
+            value: 25
+            periodSeconds: 120           # Scale down slower
+      
+      scaleUp:
+        stabilizationWindowSeconds: 30   # 30 seconds
+        policies:
+          - type: Percent
+            value: 50
+            periodSeconds: 30            # Scale up faster
+  
+  worker:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilization: 70
+
+###############################################################################
+# Production Database
+###############################################################################
+
+database:
+  replicas: 3  # Primary + 2 replicas for HA
+  
+  image:
+    tag: "14-alpine"
+  
+  resources:
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+  
+  storage:
+    size: 500Gi  # Larger in production
+    storageClass: io1  # High-performance EBS
+    iops: 3000         # Provisioned IOPS
+  
+  # Streaming replication for production
+  replication:
+    enabled: true
+    maxWalSenders: 10
+    walKeepSegments: 1024
+    hotStandby: true
+  
+  # Connection pooling
+  pooling:
+    enabled: true
+    maxConnections: 500
+  
+  # Automatic failover
+  failover:
+    enabled: true
+    autoFailover: true
+    checkInterval: 10000  # ms
+  
+  backup:
+    enabled: true
+    schedule: "0 */2 * * *"      # Every 2 hours
+    retention: 90                 # days
+    incremental:
+      enabled: true
+      schedule: "0 */6 * * *"     # Every 6 hours
+    wal:
+      enabled: true
+      archiveCommand: "s3cmd put %p s3://devpulse-backups/wal/%f"
+  
+  config:
+    maxConnections: "500"
+    sharedBuffers: "2GB"
+    effectiveCacheSize: "6GB"
+    maintenanceWorkMem: "512MB"
+    checkpointCompletionTarget: "0.95"
+    walBuffers: "32MB"
+    maxWalSize: "4GB"
+    minWalSize: "1GB"
+
+###############################################################################
+# Production Redis
+###############################################################################
+
+redis:
+  replicas: 5  # Master + 4 replicas for HA
+  
+  image:
+    tag: "7-alpine"
+  
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  
+  storage:
+    size: 200Gi  # Larger cache in production
+    storageClass: io1
+    iops: 2000
+  
+  # Sentinel for automatic failover
+  highAvailability:
+    enabled: true
+    sentinel:
+      enabled: true
+      replicas: 5
+      quorum: 3
+      downAfterMillis: 5000
+      failoverTimeout: 30000
+  
+  config:
+    maxmemory: "4gb"
+    maxmemoryPolicy: "allkeys-lru"
+    timeout: "0"           # No timeout in production
+    tcpBacklog: "1024"
+    appendonly: "yes"      # Enable AOF persistence
+    appendfsync: "everysec"
+    
+    # Replication settings
+    replicaServeStaleData: "yes"
+    replicaReadOnly: "yes"
+    replicaDiscardExpiredKeys: "yes"
+  
+  # Backup configuration
+  backup:
+    enabled: true
+    schedule: "0 3 * * *"
+    destination: s3://devpulse-backups/redis
+
+###############################################################################
+# Production Workers
+###############################################################################
+
+worker:
+  replicaCount: 3
+  
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 1024Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+  
+  queue:
+    concurrency: 10        # Higher concurrency in production
+    defaultJobOptions:
+      removeOnComplete: true
+      removeOnFail: false
+      attempts: 5          # More retries
+      backoff:
+        type: exponential
+        delay: 3000
+
+###############################################################################
+# Production Ingress
+###############################################################################
+
+ingress:
+  enabled: true
+  className: nginx
+  
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "500"
+    nginx.ingress.kubernetes.io/limit-rps: "200"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    
+    # WAF and security
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*.devpulse.io"
+  
+  tls:
+    enabled: true
+    issuer: letsencrypt-prod
+  
+  hosts:
+    - host: api.devpulse.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: devpulse-app
+          servicePort: 3000
+    
+    - host: devpulse.devpulse.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: devpulse-app
+          servicePort: 3000
+    
+    - host: ws.devpulse.io
+      paths:
+        - path: /ws
+          pathType: Prefix
+          service: devpulse-web
+          servicePort: 3002
+
+###############################################################################
+# Production Network Policies
+###############################################################################
+
+networkPolicy:
+  enabled: true
+  
+  policyTypes:
+    - Ingress
+    - Egress
+  
+  ingress:
+    enabled: true
+    # Only from Ingress controller
+    fromNamespaces:
+      - ingress-nginx
+    # Explicit pod-to-pod only
+    podToPod: true
+  
+  egress:
+    enabled: true
+    # Restrictive egress in production
+    dns: true
+    toDatabases: true
+    external: true
+    # No internet access except necessary URLs
+    allowedDomains:
+      - devpulse.io
+      - api.stripe.com
+      - api.github.com
+
+###############################################################################
+# Production RBAC
+###############################################################################
+
+rbac:
+  enabled: true
+  
+  serviceAccount:
+    create: true
+    name: devpulse-prod
+    annotations:
+      # IAM role for EKS
+      eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/devpulse-prod
+  
+  # Minimal permissions in production
+  rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list"]
+    
+    - apiGroups: [""]
+      resources: ["services"]
+      verbs: ["get"]
+
+###############################################################################
+# Production Pod Disruption Budgets
+###############################################################################
+
+podDisruptionBudget:
+  enabled: true
+  
+  app:
+    minAvailable: 3        # Always keep 3+ running
+    maxUnavailable: null
+  
+  database:
+    minAvailable: 2        # Keep primary + 1 replica
+    maxUnavailable: null
+  
+  redis:
+    minAvailable: 3        # Keep master + 2 replicas
+    maxUnavailable: null
+
+###############################################################################
+# Production Monitoring
+###############################################################################
+
+monitoring:
+  enabled: true
+  
+  prometheus:
+    enabled: true
+    retention: 30d         # Longer retention
+    storageSize: 500Gi     # Larger storage
+    replicas: 3            # HA for prometheus
+    
+    serviceMonitor:
+      enabled: true
+      interval: 15s        # More frequent scraping
+      path: /metrics
+    
+    alerts:
+      enabled: true
+      rules:
+        - alert: HighCPUUtilization
+          expr: 'cpu_usage > 85'
+          duration: 3m
+          severity: warning
+        
+        - alert: CriticalCPUUtilization
+          expr: 'cpu_usage > 95'
+          duration: 1m
+          severity: critical
+        
+        - alert: HighMemoryUtilization
+          expr: 'memory_usage > 90'
+          duration: 5m
+          severity: warning
+        
+        - alert: DatabaseDown
+          expr: 'up{job="postgresql"} == 0'
+          duration: 1m
+          severity: critical
+        
+        - alert: RedisDown
+          expr: 'up{job="redis"} == 0'
+          duration: 1m
+          severity: critical
+        
+        - alert: RebuildInProgress
+          expr: 'pg_rebuilding == 1'
+          duration: 30m
+          severity: info
+  
+  grafana:
+    enabled: true
+    adminPassword: verySecureProductionPassword123!
+    
+    # Multi-datasource setup
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-prod:9090
+      
+      - name: Loki
+        type: loki
+        url: http://loki-prod:3100
+    
+    dashboards:
+      enabled: true
+      persistence:
+        enabled: true
+        size: 10Gi
+
+###############################################################################
+# Production Backup & DR
+###############################################################################
+
+backup:
+  enabled: true
+  
+  database:
+    enabled: true
+    schedule: "0 */2 * * *"       # Every 2 hours
+    retention: 90
+    type: full
+    
+    # Point-in-time recovery
+    pointInTimeRecovery:
+      enabled: true
+      walArchive: true
+      walRetention: 30              # days
+  
+  s3:
+    enabled: true
+    bucket: devpulse-backups-prod
+    region: us-east-1
+    
+    # S3 high availability
+    replicate:
+      enabled: true
+      destinations:
+        - bucket: devpulse-backups-prod-replica
+          region: eu-west-1
+    
+    lifecycle:
+      - expirationDays: 90
+        transitionToDays: 7
+        transitionToClass: STANDARD_IA
+      
+      - expirationDays: 180
+        transitionToDays: 30
+        transitionToClass: GLACIER
+      
+      - expirationDays: 365
+        transitionToDays: 180
+        transitionToClass: DEEP_ARCHIVE
+
+###############################################################################
+# Production Security
+###############################################################################
+
+security:
+  # Pod Security Policy
+  podSecurityPolicy:
+    enabled: true
+    policy: restricted
+  
+  # Network policies
+  networkPolicy:
+    enabled: true
+  
+  # Secret encryption at rest
+  secretEncryption:
+    enabled: true
+    provider: aws-kms
+    keyId: arn:aws:kms:us-east-1:ACCOUNT_ID:key/KEY_ID
+  
+  # Image scanning
+  imageScan:
+    enabled: true
+    scanOnDeploy: true
+  
+  # Audit logging
+  auditLogging:
+    enabled: true
+    logBackend: cloudwatch
+
+###############################################################################
+# Production Cost Optimization
+###############################################################################
+
+costOptimization:
+  # Use spot instances for non-critical workloads
+  spot:
+    enabled: true
+    maxPrice: "0.50"       # Max price per hour
+    interruptionBehavior: terminate
+  
+  # Reserved instances for core services
+  reserved:
+    enabled: true
+    commitmentTerm: ONE_YEAR
+    paymentOption: ALL_UPFRONT
+  
+  # Resource quotas
+  quotas:
+    enabled: true
+    cpu: 100
+    memory: 200Gi
+    storage: 1Ti
+
+###############################################################################
+# Production Multi-Region
+###############################################################################
+
+multiRegion:
+  enabled: true
+  
+  regions:
+    - name: us-east-1
+      primary: true
+      replicas: 5
+      workers: 3
+      enabled: true
+    
+    - name: eu-west-1
+      primary: false
+      replicas: 3
+      workers: 2
+      enabled: true
+    
+    - name: ap-southeast-1
+      primary: false
+      replicas: 2
+      workers: 1
+      enabled: true
+  
+  # DNS failover configuration
+  dnsFailover:
+    enabled: true
+    provider: route53
+    ttl: 30
+    healthChecks:
+      enabled: true
+      interval: 30
+      failureThreshold: 1

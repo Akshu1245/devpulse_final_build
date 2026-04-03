@@ -1,0 +1,137 @@
+src/pages/LandingPage.tsx(10,26): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(33,20): error TS2339: Property 'getContext' does not exist on type 'HTMLElement'.
+src/pages/LandingPage.tsx(34,5): error TS7034: Variable 'W' implicitly has type 'any' in some locations where its type cannot be determined.
+src/pages/LandingPage.tsx(34,8): error TS7034: Variable 'H' implicitly has type 'any' in some locations where its type cannot be determined.
+src/pages/LandingPage.tsx(34,11): error TS7034: Variable 'particles' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/pages/LandingPage.tsx(34,27): error TS7034: Variable 'hackers' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/pages/LandingPage.tsx(36,24): error TS18047: 'canvas' is possibly 'null'.
+src/pages/LandingPage.tsx(36,31): error TS2339: Property 'width' does not exist on type 'HTMLElement'.
+src/pages/LandingPage.tsx(36,62): error TS18047: 'canvas' is possibly 'null'.
+src/pages/LandingPage.tsx(36,69): error TS2339: Property 'height' does not exist on type 'HTMLElement'.
+src/pages/LandingPage.tsx(41,15): error TS7006: Parameter 'type' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(42,10): error TS2339: Property 'type' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(47,10): error TS2339: Property 'x' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(47,30): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(48,10): error TS2339: Property 'y' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(49,10): error TS2339: Property 'vx' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(50,10): error TS2339: Property 'vy' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(51,10): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(52,10): error TS2339: Property 'fadeIn' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(53,10): error TS2339: Property 'size' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(53,22): error TS2339: Property 'type' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(54,10): error TS2339: Property 'trail' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(55,10): error TS2339: Property 'compromised' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(56,10): error TS2339: Property 'wobble' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(57,10): error TS2339: Property 'wobbleSpeed' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(58,10): error TS2339: Property 'label' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(58,23): error TS2339: Property 'type' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(58,65): error TS2339: Property 'type' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(73,10): error TS2339: Property 'wobble' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(73,25): error TS2339: Property 'wobbleSpeed' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(74,10): error TS2339: Property 'x' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(74,20): error TS2339: Property 'vx' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(74,39): error TS2339: Property 'wobble' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(75,10): error TS2339: Property 'y' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(75,20): error TS2339: Property 'vy' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(76,10): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(76,32): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(76,45): error TS2339: Property 'fadeIn' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(77,10): error TS2339: Property 'trail' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(77,30): error TS2339: Property 'x' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(77,41): error TS2339: Property 'y' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(77,52): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(78,13): error TS2339: Property 'trail' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(78,37): error TS2339: Property 'trail' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(81,18): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(81,28): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(82,23): error TS2339: Property 'x' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(82,41): error TS2339: Property 'y' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(85,14): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(86,14): error TS2339: Property 'vy' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(87,14): error TS2339: Property 'vx' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(90,13): error TS2339: Property 'y' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(90,17): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(90,32): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(93,22): error TS2339: Property 'compromised' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(94,32): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(95,14): error TS2339: Property 'type' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(96,35): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(97,36): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(99,24): error TS2339: Property 'trail' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(100,22): error TS2339: Property 'trail' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(101,26): error TS2339: Property 'trail' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(101,47): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(103,30): error TS2339: Property 'size' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(104,28): error TS2339: Property 'compromised' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(109,18): error TS2339: Property 'x' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(109,26): error TS2339: Property 'y' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(109,34): error TS2339: Property 'size' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(116,13): error TS2339: Property 'label' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(116,27): error TS2339: Property 'alpha' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(116,47): error TS2339: Property 'size' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(119,25): error TS2339: Property 'label' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(119,37): error TS2339: Property 'x' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(119,49): error TS2339: Property 'y' does not exist on type 'Particle'.
+src/pages/LandingPage.tsx(127,10): error TS2339: Property 'x' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(127,36): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(128,10): error TS2339: Property 'y' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(128,14): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(128,42): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(129,10): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(130,10): error TS2339: Property 'pulse' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(131,10): error TS2339: Property 'pulseSpeed' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(132,10): error TS2339: Property 'caught' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(133,10): error TS2339: Property 'caughtTimer' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(134,10): error TS2339: Property 'label' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(137,10): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(137,32): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(138,10): error TS2339: Property 'pulse' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(138,24): error TS2339: Property 'pulseSpeed' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(139,48): error TS2339: Property 'caught' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(140,13): error TS2339: Property 'caught' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(140,27): error TS2339: Property 'caughtTimer' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(140,50): error TS2339: Property 'caughtTimer' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(140,73): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(141,13): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(141,32): error TS2339: Property 'caught' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(144,10): error TS2339: Property 'x' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(144,36): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(145,10): error TS2339: Property 'y' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(145,14): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(145,42): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(146,10): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(146,26): error TS2339: Property 'caught' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(146,47): error TS2339: Property 'caughtTimer' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(149,13): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(150,35): error TS2339: Property 'pulse' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(150,62): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(151,22): error TS2339: Property 'caught' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(153,34): error TS2339: Property 'pulse' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(155,18): error TS2339: Property 'x' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(155,26): error TS2339: Property 'y' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(160,18): error TS2339: Property 'x' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(160,26): error TS2339: Property 'y' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(170,23): error TS2339: Property 'label' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(170,35): error TS2339: Property 'x' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(170,43): error TS2339: Property 'y' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(173,14): error TS2339: Property 'caught' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(176,47): error TS2339: Property 'alpha' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(178,31): error TS2339: Property 'x' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(178,39): error TS2339: Property 'y' does not exist on type 'Hacker'.
+src/pages/LandingPage.tsx(187,14): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(187,24): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(233,9): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(233,20): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(234,9): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(234,20): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(235,9): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(235,19): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(253,16): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(283,21): error TS7005: Variable 'W' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(283,23): error TS7005: Variable 'H' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(290,3): error TS7005: Variable 'particles' implicitly has an 'any[]' type.
+src/pages/LandingPage.tsx(291,3): error TS7005: Variable 'hackers' implicitly has an 'any[]' type.
+src/pages/LandingPage.tsx(305,18): error TS7006: Parameter 'el' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(305,22): error TS7006: Parameter 'target' implicitly has an 'any' type.
+src/pages/LandingPage.tsx(325,18): error TS2345: Argument of type 'Element | null' is not assignable to parameter of type 'Element'.
+  Type 'null' is not assignable to type 'Element'.

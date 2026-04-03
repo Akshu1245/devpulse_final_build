@@ -1,0 +1,5 @@
+#!/bin/bash
+# PostgreSQL Replica Initialization Script
+# Note: Replica is initialized via pg_basebackup in docker-compose.prod.yml
+
+echo "PostgreSQL Replica initialization via pg_basebackup"
